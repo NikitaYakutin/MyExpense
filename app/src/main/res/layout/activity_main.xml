@@ -28,6 +28,13 @@
         android:text="Добавить"
         android:padding="12dp"
         android:layout_marginTop="12dp" />
+    <Button
+        android:id="@+id/BtnshowButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Подсчитать"
+        android:padding="12dp"
+        android:layout_marginTop="12dp" />
 
     <TextView
         android:id="@+id/tvExpenses"

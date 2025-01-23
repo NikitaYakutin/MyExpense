@@ -13,16 +13,14 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-data class Expense(
-    val amount: Double,
-    val category: String,
-    val date: String
-) {
-    fun getExpenseInfo(): String {
+// Data class representing an expense
+data class Expense(val amount: Double, val category: String, val date: String) {
+    fun displayInfo(): String {
         return "Сумма: $amount, Категория: $category, Дата: $date"
     }
 }
 
+// Class managing a list of expenses
 class ExpenseManager {
     private val expenses = mutableListOf<Expense>()
 
@@ -30,19 +28,16 @@ class ExpenseManager {
         expenses.add(expense)
     }
 
-    fun getAllExpenses(): String {
-        return if (expenses.isEmpty()) {
-            "Никаких зарегистрированных расходов."
-        } else {
-            expenses.joinToString(separator = "\n") { it.getExpenseInfo() }
-        }
+    fun getAllExpenses(): List<Expense> {
+        return expenses
     }
 
     fun getTotalByCategory(): Map<String, Double> {
         return expenses.groupBy { it.category }
-            .mapValues { (_, expenses) -> expenses.sumOf { it.amount } }
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
     }
 }
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -52,37 +47,45 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val etAmount = findViewById<EditText>(R.id.etAmount)
-        val etCategory = findViewById<EditText>(R.id.etCategory)
+        val amountInput: EditText = findViewById(R.id.etAmount)
+        val categoryInput: EditText = findViewById(R.id.etCategory)
 
-        val btnAddExpense = findViewById<Button>(R.id.btnAddExpense)
-        val tvExpenses = findViewById<TextView>(R.id.tvExpenses)
-// Получение текущей даты в формате dd/MM/yyyy
-        val currentDate = getCurrentDate()
-        btnAddExpense.setOnClickListener {
-            val amount = etAmount.text.toString().toDoubleOrNull()
-            val category = etCategory.text.toString()
+        val addButton: Button = findViewById(R.id.btnAddExpense)
+        val showButton: Button = findViewById(R.id.BtnshowButton)
+        val outputView: TextView = findViewById(R.id.tvExpenses)
 
+        addButton.setOnClickListener {
+            val amount = amountInput.text.toString().toDoubleOrNull()
+            val category = categoryInput.text.toString()
+            val currentDate = getCurrentDate()
 
-
-            // Если сумма или категория не введены, показываем ошибку
-            if (amount != null && category.isNotEmpty()) {
-                // Дата будет автоматически заполняться текущей датой
+            if (amount != null && category.isNotBlank() && currentDate.isNotBlank()) {
                 val expense = Expense(amount, category, currentDate)
                 expenseManager.addExpense(expense)
+                outputView.text = "История: ${expense.displayInfo()}"
+                amountInput.text.clear()
+                categoryInput.text.clear()
 
-                // Обновляем TextView с расходами
-                tvExpenses.text = expenseManager.getAllExpenses()
             } else {
-                Toast.makeText(this, "Пожалуйста, заполните все поля правильно.", Toast.LENGTH_SHORT).show()
+                outputView.text = "Заполни все поля!."
             }
+        }
 
+        showButton.setOnClickListener {
+            val allExpenses = expenseManager.getAllExpenses()
+            val totalByCategory = expenseManager.getTotalByCategory()
+
+            val expensesText = allExpenses.joinToString("\n") { it.displayInfo() }
+            val totalText = totalByCategory.entries.joinToString("\n") { "${it.key}: ${it.value}" }
+
+            outputView.text = "Все траты:\n$expensesText\n\nПо категориям:\n$totalText"
+        }
     }
 }
-    // Метод для получения текущей даты в формате "dd/MM/yyyy"
+
+// Метод для получения текущей даты в формате "dd/MM/yyyy"
     private fun getCurrentDate(): String {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val calendar = Calendar.getInstance()
         return dateFormat.format(calendar.time)
     }
-}
